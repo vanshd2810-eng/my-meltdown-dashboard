@@ -46,17 +46,17 @@ st.markdown("""
         border-radius: 999px; padding: 3px 11px; font-size: .78rem; margin-right: 6px;}
 .verdict {border-radius: 12px; padding: 14px 18px; margin: 4px 0 16px 0; border: 1px solid #FCD34D; background: #FFFBEB;}
 .verdict b.t {color: #92400E; font-size: 1.05rem;}
-.kpi {background: #fff; border: 1px solid #E5E9EE; border-radius: 12px; padding: 14px 16px; height: 100%;
+.kpi {background: #fff; border: 1px solid #E5E9EE; border-radius: 12px; padding: 14px 16px; height: 100%; margin-bottom: 4px;
       box-shadow: 0 1px 2px rgba(16,24,40,.04);}
 .kpi .l {color: #64748B; font-size: .8rem; text-transform: uppercase; letter-spacing: .04em;}
-.kpi .v {font-size: 1.75rem; font-weight: 700; color: #111827; line-height: 1.25; margin-top: 2px;}
+.kpi .v {font-size: clamp(1.25rem, 2.1vw, 1.75rem); font-weight: 700; color: #111827; line-height: 1.25; margin-top: 2px; white-space: nowrap;}
 .kpi .s {color: #64748B; font-size: .8rem; margin-top: 2px;}
 .kpi.good {border-top: 4px solid #15803D;} .kpi.bad {border-top: 4px solid #B91C1C;} .kpi.neutral {border-top: 4px solid #0F766E;}
 .takeaway {background: #F0FDFA; border-left: 4px solid #0F766E; border-radius: 8px; padding: 12px 16px; margin: 6px 0 14px 0;}
 .takeaway b {color: #115E59;}
 .sec {font-size: 1.25rem; font-weight: 700; color: #111827; margin: 18px 0 2px 0;}
 .sub {color: #64748B; font-size: .92rem; margin-bottom: 10px;}
-.persona {background: #fff; border: 1px solid #E5E9EE; border-radius: 12px; padding: 14px 16px; height: 100%;}
+.persona {background: #fff; border: 1px solid #E5E9EE; border-radius: 12px; padding: 14px 16px; height: 100%; margin-bottom: 14px;}
 .persona h4 {margin: 0; font-size: 1.02rem;} .persona .tier {color: #64748B; font-size: .8rem; margin-bottom: 6px;}
 .persona .big {font-size: 1.6rem; font-weight: 700;} .persona .desc {font-size: .85rem; color: #374151; margin: 6px 0;}
 .persona table {width: 100%; font-size: .8rem;} .persona td {padding: 1px 0;} .persona td.r {text-align: right; font-weight: 600;}
@@ -201,7 +201,6 @@ tabs = st.tabs(["📊 Executive summary", "🧹 Data quality", "🎯 Classificat
 # ================================================================== EXECUTIVE SUMMARY
 with tabs[0]:
     nps_b = kpi(res, "nps_buyers")
-    cols = st.columns(6)
     cards = [
         ("Would buy", pct(kpi(res, "buy_rate")), f"±{pct(base['buy_rate_ci'])} (95% CI)", "good"),
         ("Most-probable segment", pct(kpi(res, "top_tier_share")), f"{pct(kpi(res, 'top_tier_buy'))} of them would buy", "good"),
@@ -210,8 +209,10 @@ with tabs[0]:
         ("Buyer NPS", f"{nps_b:.1f}", "promoters − detractors", "good" if nps_b > 0 else "bad"),
         ("Targeting power", f"{clf_best['cv_auc']:.2f} AUC", f"baseline 0.50 · accuracy {pct(clf_best['accuracy'])}", "good"),
     ]
-    for c, (l, v, s, t) in zip(cols, cards):
-        c.markdown(card(l, v, s, t), unsafe_allow_html=True)
+    for row in (cards[:3], cards[3:]):
+        for c, (l, v, s, t) in zip(st.columns(3), row):
+            c.markdown(card(l, v, s, t), unsafe_allow_html=True)
+        st.write("")
 
     left, right = st.columns([1.15, 1], gap="large")
     with left:
@@ -376,7 +377,7 @@ with tabs[3]:
         col.markdown(card(t["tier"], pct(t["buy_rate"]), f"buy rate · {pct(t['share'])} of people · {pct(t['value_share'])} of expected revenue", tone),
                      unsafe_allow_html=True)
     st.write("")
-    cols = st.columns(len(segs))
+    cols = [c for _ in range((len(segs) + 1) // 2) for c in st.columns(2)]
     for i, (col, s) in enumerate(zip(cols, segs)):
         nm = NAMES[s["segment"]]
         col.markdown(f"""<div class="persona" style="border-top:4px solid {SEG_COLORS[i]}">
