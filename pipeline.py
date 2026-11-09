@@ -114,7 +114,7 @@ def run(raw, SEED=7):
     Xtr, Xte, ytr, yte = train_test_split(X, y, test_size=.25, stratify=y, random_state=SEED)
     models = {
         "Logistic regression": make_pipeline(StandardScaler(), LogisticRegression(max_iter=2000, C=.5)),
-        "Random forest": RandomForestClassifier(n_estimators=200, min_samples_leaf=5, random_state=SEED, n_jobs=-1),
+        "Random forest": RandomForestClassifier(n_estimators=200, min_samples_leaf=5, random_state=SEED, n_jobs=1),
         "Gradient boosting": HistGradientBoostingClassifier(max_depth=4, learning_rate=.05, max_iter=300, random_state=SEED),
     }
     cv = StratifiedKFold(5, shuffle=True, random_state=SEED)
@@ -147,7 +147,7 @@ def run(raw, SEED=7):
     ])
 
     def grouped_importance(model, Xv, yv, scoring):
-        pi = permutation_importance(model, Xv, yv, n_repeats=5, random_state=SEED, scoring=scoring, n_jobs=-1)
+        pi = permutation_importance(model, Xv, yv, n_repeats=5, random_state=SEED, scoring=scoring, n_jobs=1)
         s = pd.Series(pi.importances_mean, index=Xv.columns).groupby(group_of).sum()
         return s.sort_values(ascending=False)
 
@@ -276,7 +276,7 @@ def run(raw, SEED=7):
                          "medae": r(np.median(np.abs(y_eval - pred)), 0)})
     lin_raw = LinearRegression().fit(Xb.iloc[idx_tr], yb_raw[idx_tr])
     evaluate("Linear regression", lin_raw.predict(Xb.iloc[idx_te]), "Left in")
-    rf_raw = RandomForestRegressor(200, min_samples_leaf=5, random_state=SEED, n_jobs=-1).fit(Xb.iloc[idx_tr], yb_raw[idx_tr])
+    rf_raw = RandomForestRegressor(200, min_samples_leaf=5, random_state=SEED, n_jobs=1).fit(Xb.iloc[idx_tr], yb_raw[idx_tr])
     evaluate("Random forest", rf_raw.predict(Xb.iloc[idx_te]), "Left in")
     class LogModel:
         def __init__(self, m): self.m = m
@@ -285,7 +285,7 @@ def run(raw, SEED=7):
         def score(self, X, y): return r2_score(np.log1p(y), np.log1p(np.clip(self.predict(X), 0, None)))
     lin = LogModel(make_pipeline(StandardScaler(), LinearRegression())).fit(Xb.iloc[idx_tr], yb[idx_tr])
     evaluate("Linear regression (log)", lin.predict(Xb.iloc[idx_te]), "Capped at IQR fence"); reg_fit["Linear regression (log)"] = lin
-    rf = LogModel(RandomForestRegressor(200, min_samples_leaf=8, random_state=SEED, n_jobs=-1)).fit(Xb.iloc[idx_tr], yb[idx_tr])
+    rf = LogModel(RandomForestRegressor(200, min_samples_leaf=8, random_state=SEED, n_jobs=1)).fit(Xb.iloc[idx_tr], yb[idx_tr])
     evaluate("Random forest (log)", rf.predict(Xb.iloc[idx_te]), "Capped at IQR fence"); reg_fit["Random forest (log)"] = rf
     gb = LogModel(HistGradientBoostingRegressor(max_depth=3, learning_rate=.04, max_iter=300, random_state=SEED)).fit(Xb.iloc[idx_tr], yb[idx_tr])
     evaluate("Gradient boosting (log)", gb.predict(Xb.iloc[idx_te]), "Capped at IQR fence"); reg_fit["Gradient boosting (log)"] = gb
